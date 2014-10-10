@@ -1,6 +1,7 @@
 import matplotlib
 matplotlib.use('TKAgg')
 
+import os
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import random
@@ -30,7 +31,13 @@ class Graph:
 		self.force2 = [0] * self.length
 		self.force3 = [0] * self.length
 
-		self.log = open('logs/%s.txt' % datetime.datetime.now(), 'wb')
+		# Creates the "logs" folder if it doesn't exist
+		if not os.path.exists('logs'):
+    		  os.makedirs('logs')
+
+	  	# creates a file in "logs" folder, with format "Day-Month-Year__Hour-Minute-Second"
+	  	# eg. 10/10/2014 12:51:30 AM is "10-10-2014__00-51-30"
+		self.log = open('logs/%s.txt' % time.strftime("%d-%m-%Y__%H-%M-%S"), 'wb')
 		self.time = time.time()
 
 
