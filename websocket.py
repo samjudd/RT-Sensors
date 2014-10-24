@@ -1,4 +1,50 @@
-import socket, hashlib, base64, threading
+import socket
+import hashlib
+import base64
+import threading
+import time
+
+class ClientConnection:
+    MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+    HSHAKE_RESP = 'HTTP/1.1 101 Switching Protocols\r\n' + \
+                  'Upgrade: websocket\r\n' + \
+                  'Connection: Upgrade\r\n' + \
+                  'Sec-WebSocket-Accept: %s\r\n' + \
+                  '\r\n'
+    
+    def __init__(self, client):
+        print('Handshaking...')
+        self.handshake(client)
+        print('Handshake successful...')
+
+        try:
+            threading.Thread(target=self.loop).start()
+        except Exception as e:
+            print("Exception %s" % (str(e)))
+
+        print('Client closed: ' + str(address))
+        
+    def loop(self):
+        while 1:
+                data = self.receive_data(client)
+                print("received [%s]" % (data,))
+                self.send(data)
+    
+    def handshake(self, client):
+        data = client.recv(2048)
+
+        headers = {}
+        lines = data.splitlines()
+        for l in lines:
+            parts = l.split(": ", 1)
+            if len(parts) == 2:
+                headers[parts[0]] = parts[1]
+        headers['code'] = lines[len(lines) - 1]
+
+        key = headers['Sec-WebSocket-Key']
+        resp_data = self.HSHAKE_RESP % (base64.b64encode(hashlib.sha1(key + self.MAGIC).digest()),)
+
+        return client.send(resp_data)
 
 class PyWSock:
     MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
@@ -29,13 +75,13 @@ class PyWSock:
         print('Handshaking...')
         self.handshake(client)
         print('Handshake successful...')
-        self.broadcast_resp('hello')
+        self.send('hello')
 
         try:
             while 1:
                 data = self.receive_data(client)
                 print("received [%s]" % (data,))
-                self.broadcast_resp(data)
+                self.send(data)
         except Exception as e:
             print("Exception %s" % (str(e)))
 
@@ -66,7 +112,7 @@ class PyWSock:
     def receive_data(self, client):
         # as a simple server, we expect to receive:
         # - all data at one go and one frame
-        #    - one frame at a time
+        # - one frame at a time
         #    - text protocol
         #    - no ping pong messages
         data = bytearray(client.recv(512))
@@ -91,7 +137,7 @@ class PyWSock:
             str_data = str(bytearray(unmasked_data))
         return str_data
 
-    def broadcast_resp(self, data):
+    def send(self, data):
         # 1st byte: fin bit set. text frame bits set.
         # 2nd byte: no mask. length set in 1 byte. 
         resp = bytearray([0b10000001, len(data)])
@@ -108,12 +154,16 @@ class PyWSock:
         self.LOCK.release()
 
     def close(self):
-
         self.LOCK.acquire()
         for client in self.clients:
             client.close()
             self.clients.remove(client)
         self.LOCK.release()
 
-
-ws = PyWSock(2005)
+    def loop(self):
+        while True:
+            self.send('hi')
+            time.sleep(100)
+            
+threading.Thread(target=self.handle_client, args=(connection, address)).start()
+    ws = PyWSock(2005)
