@@ -19,6 +19,14 @@ class Graph:
         self.interval = 30  # milliseconds per sample
         self.length = 100  # saved points
         self.t = [-float(self.interval) / 1000 * k for k in range(self.length, 0, -1)]
+        
+        #set input pins
+        self.Force1pin = 6
+        self.Force2pin = 1
+        self.Force3pin = 2
+        self.Pressure1pin = 4
+        self.Pressure2pin = 5
+        self.Temp1pin = 0
 
 	#set length of pressure record
         self.pressure1 = [0] * self.length
@@ -28,6 +36,9 @@ class Graph:
         self.force1 = [0] * self.length
         self.force2 = [0] * self.length
         self.force3 = [0] * self.length
+        
+        #set length of temperature record
+        self.temp1 = [0] * self.length
 
         # Creates the "logs" folder if it doesn't exist
         if not os.path.exists('logs'):
@@ -44,8 +55,8 @@ class Graph:
         self.d.getCalibrationData()
         self.d.configIO(FIOAnalog=255)
         
-	#arrange plots in 2 rows and 1 column
-        self.fig, (self.ax1, self.ax2) = plt.subplots(nrows=2, ncols=1)
+	#arrange plots in 3 rows and 1 column
+        self.fig, (self.ax1, self.ax2, self.ax3) = plt.subplots(nrows=3, ncols=1)
 
 	#adjust location of plots in window
         plt.subplots_adjust(bottom=0.05, top=0.95, left=0.05, right=0.9)
@@ -53,10 +64,12 @@ class Graph:
 	#label each plot on the y axis
         self.ax1.set_ylabel('Pressure (psi)')
         self.ax2.set_ylabel('Force (N)')
+        self.ax3.set_ylabel('Temperature (deg C)')
 	
 	#set the limits of the axes, this needs to change
         self.ax1.set_ylim([0, 5])
         self.ax2.set_ylim([-5, 5])
+        self.ax3.set_ylim([0,2000])
 
 	#array of zeros to hold points
         y = [0] * self.length
@@ -69,10 +82,14 @@ class Graph:
         self.forceLine1 = self.ax2.plot(self.t, y, label="Force 1")[0]
         self.forceLine2 = self.ax2.plot(self.t, y, label="Force 2")[0]
         self.forceLine3 = self.ax2.plot(self.t, y, label="Force 3")[0]
+        
+        #make temperature line on plot
+        self.tempLine1 = self.ax3.plot(self.t, y, label='Temp 1')[0]
 
 	#make the legend look nice	
         self.ax1.legend(bbox_to_anchor=(1.0, 0.5), loc='center left', prop={'size': 10})
         self.ax2.legend(bbox_to_anchor=(1.0, 0.5), loc='center left', prop={'size': 10})
+        self.ax3.legend(bbox_to_anchor=(1.0, 0.5), loc='center left', prop={'size': 10})
 
     def readData(self):
         '''read data from Labjack and save the most recent values'''
@@ -86,13 +103,16 @@ class Graph:
         # nominal = 300
 
 	#get force readings (in volts) from labjack
-        force1_v = self.d.getAIN(0)
-        force2_v = self.d.getAIN(1)
-        force3_v = self.d.getAIN(2)
+        force1_v = self.d.getAIN(self.Force1pin)
+        force2_v = self.d.getAIN(self.Force2pin)
+        force3_v = self.d.getAIN(self.Force3pin)
 
 	#get pressure readings (in volts) from labjack
-        pressure1_v = self.d.getAIN(4)
-        pressure2_v = self.d.getAIN(5)
+        pressure1_v = self.d.getAIN(self.Pressure1pin)
+        pressure2_v = self.d.getAIN(self.Pressure2pin)
+        
+        #get temperature readings (in volts) from labjack
+        temp1_v = self.d.getAIN(self.Temp1pin)
         
         #using calibrations from earlier, convert the voltage readings to meaningful data 
         #JOHANNES REPLACE THE 1s with actual things
@@ -103,18 +123,22 @@ class Graph:
         pressure1 = pressure1_v * 1
         pressure2 = pressure2_v * 1
         
-        sample = [pressure1, pressure2, force1, force2, force3]
+        temp1 = temp1_v * 1
+        
+        sample = [force1, force2, force3, pressure1, pressure2, temp1]
 
 	#write sample to log
         logString = ','.join(map(str, sample))
         self.log.write(logString + '\n')
-
-        self.pressure1 = self.pressure1[1:] + [pressure1]
-        self.pressure2 = self.pressure2[1:] + [pressure2]
-
+        
         self.force1 = self.force1[1:] + [force1]
         self.force2 = self.force2[1:] + [force2]
         self.force3 = self.force3[1:] + [force3]
+
+        self.pressure1 = self.pressure1[1:] + [pressure1]
+        self.pressure2 = self.pressure2[1:] + [pressure2]
+        
+        self.temp1 = self.temp1[1:] + [temp1]
 
 
     def init(self):
@@ -123,14 +147,16 @@ class Graph:
         y = [0] * self.length
 	
 	#initializes the graph to the inital values
-        self.pressureLine1.set_data(self.t, y)
-        self.pressureLine2.set_data(self.t, y)
-
-        self.forceLine1.set_data(self.t, y)
+	self.forceLine1.set_data(self.t, y)
         self.forceLine2.set_data(self.t, y)
         self.forceLine3.set_data(self.t, y)
+	
+        self.pressureLine1.set_data(self.t, y)
+        self.pressureLine2.set_data(self.t, y)
+        
+        self.tempLine1.set_data(self.t, y)
 
-        return [self.pressureLine1, self.pressureLine2, self.forceLine1, self.forceLine2, self.forceLine3]
+        return [self.forceLine1, self.forceLine2, self.forceLine3, self.pressureLine1, self.pressureLine2, self.tempLine1]
 
 
     def animate(self, i):
@@ -140,14 +166,17 @@ class Graph:
         self.readData()
 	
 	#plots the current data
-        self.pressureLine1.set_ydata(self.pressure1)
-        self.pressureLine2.set_ydata(self.pressure2)
 
         self.forceLine1.set_ydata(self.force1)
         self.forceLine2.set_ydata(self.force2)
         self.forceLine3.set_ydata(self.force3)
+        
+        self.pressureLine1.set_ydata(self.pressure1)
+        self.pressureLine2.set_ydata(self.pressure2)
+        
+        self.tempLine1.set_ydata(self.temp1)
 
-        return [self.pressureLine1, self.pressureLine2, self.forceLine1, self.forceLine2, self.forceLine3]
+        return [self.forceLine1, self.forceLine2, self.forceLine3, self.pressureLine1, self.pressureLine2, self.tempLine1]
 
 
     def show(self):
