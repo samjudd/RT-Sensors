@@ -1,0 +1,35 @@
+
+.graphrow {
+    display:table;
+}
+
+.graphcolumn {
+    vertical-align: top;
+    display: table-cell;
+}
+
+.no-margin {
+    margin: 0px;
+}
+
+.no-padding {
+    padding:0px;
+}
+
+.blueborder {
+    border: 1px solid #888;
+}
+
+.minigraph {
+    height:75px;
+}
+
+.biggraph {
+    height: 400px;
+    width: 100%;
+}
+
+.icon {
+    height:75px; 
+    display:table-cell; 
+}
