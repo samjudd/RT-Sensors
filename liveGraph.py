@@ -9,7 +9,7 @@ import random
 import datetime
 import time
 import u3
-
+#import threading #use to make function loop every x seconds 
 
 class Graph:
     '''Class for displaying the 3 subplots in real time for the hot fire test
