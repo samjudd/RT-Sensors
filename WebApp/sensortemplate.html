@@ -1,0 +1,22 @@
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <ul class="list-inline no-margin">
+            <li>AIN#</li>
+            <li>
+                <input type="text" class="form-control" placeholder="Sensor name">
+            </li>
+            <li class="pull-right">mu = 20V sigma = +- 3V</li>
+        </ul>
+        <div class="panel-body">
+                    <div class="graphrow">
+                        <div class="graphcolumn">
+                            <a class="btn btn-lg no-padding" href="#">
+                                <i class="fa fa-play-circle fa-4x" onclick="connect();"></i>
+    <button type="button" onclick="terminate()">Close connection</button>
+                            </a>
+                        </div>
+                        <div class="graphcolumn" id="container2" style="height:75px;width:100%;"></div>
+                    </div>
+        </div>
+    </div>
+</div>
