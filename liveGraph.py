@@ -9,6 +9,7 @@ import random
 import datetime
 import time
 import u3
+from thermocouple_convert import ThermocoupleConverter
 #import threading #use to make function loop every x seconds 
 
 class Graph:
@@ -91,6 +92,9 @@ class Graph:
         self.ax2.legend(bbox_to_anchor=(1.0, 0.5), loc='center left', prop={'size': 10})
         self.ax3.legend(bbox_to_anchor=(1.0, 0.5), loc='center left', prop={'size': 10})
 
+        # Temperature data conversion
+        self.tc = ThermocoupleConverter('thermocouple_type_B.csv')
+
     def readData(self):
         '''read data from Labjack and save the most recent values'''
 
@@ -112,7 +116,7 @@ class Graph:
         pressure2_v = self.d.getAIN(self.Pressure2pin)
         
         #get temperature readings (in volts) from labjack
-        temp1_v = self.d.getAIN(self.Temp1pin)
+        temp1_v = self.d.getAIN(self.Temp1pin)        
         
         #using calibrations from earlier, convert the voltage readings to meaningful data 
         #JOHANNES REPLACE THE 1s with actual things
@@ -123,7 +127,10 @@ class Graph:
         pressure1 = pressure1_v * 1
         pressure2 = pressure2_v * 1
         
-        temp1 = temp1_v * 1
+        if temp1_v < 0:
+            temp1_v = 0
+        temp1 = self.tc.get_temperature(temp1_v / 368.36)
+        print 'temp1_v = %.3f volts amplified, %.1f K' % (temp1_v, temp1)
         
         sample = [force1, force2, force3, pressure1, pressure2, temp1]
 
