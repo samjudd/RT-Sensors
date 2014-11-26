@@ -117,8 +117,8 @@ class Graph:
         #using calibrations from earlier, convert the voltage readings to meaningful data 
         #JOHANNES REPLACE THE 1s with actual things
         force1 = force1_v * 1
-        force1 = force1_v * 1
-        force1 = force1_v * 1
+        force2 = force2_v * 1
+        force3 = force3_v * 1
         
         pressure1 = pressure1_v * 1
         pressure2 = pressure2_v * 1
