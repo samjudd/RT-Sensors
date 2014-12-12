@@ -13,7 +13,7 @@ if __name__ == '__main__':
 		raise ValueError("No results file exists with name %s."%(table_name))
 	
 	M = np.genfromtxt(table_name, delimiter=",")
-	p_raw = M[:, 0:2]
+	p_raw = M[:, 3:5]
 
 	interval = 0.030
 	t = np.arange(0, len(p_raw[:,0])*interval, interval)
@@ -21,8 +21,10 @@ if __name__ == '__main__':
 	plt.hold('on')
 	for i in [0,1]:
 		scale = 5000.0 / 4.0 * 0.006895
-		if units == 'psi':
+		if units == 'psi' and i == 0:
 			scale = 5000.0 / 4.0
+		if units == 'psi' and i == 1:
+			scale = 3000.0 / 4.0
 		offset = np.mean(p_raw[0:50, i])
 		p = scale * (p_raw[:, i] - offset)
 		plt.plot(t, p, label='Pressure %d' % i)
