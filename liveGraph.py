@@ -22,9 +22,9 @@ class Graph:
         self.t = [-float(self.interval) / 1000 * k for k in range(self.length, 0, -1)]
         
         #set input pins
-        self.Force1pin = 6
-        self.Force2pin = 1
-        self.Force3pin = 2
+        self.Force1pin = 1
+        self.Force2pin = 2
+        self.Force3pin = 6
         self.Pressure1pin = 4
         self.Pressure2pin = 5
         self.Temp1pin = 0
@@ -129,8 +129,15 @@ class Graph:
         
         if temp1_v < 0:
             temp1_v = 0
-        temp1 = self.tc.get_temperature(temp1_v / 368.36)
-        print 'temp1_v = %.3f volts amplified, %.1f K' % (temp1_v, temp1)
+        temp1 = 0
+
+        temp_diff_v = temp1_v - force1_v
+
+        try:
+            temp1 = self.tc.get_temperature(temp_diff_v / 368.36)
+        except ValueError:
+            pass
+        print 'temp1_v = %.3f volts amplified, %.1f K' % (temp_diff_v, temp1)
         
         sample = [force1, force2, force3, pressure1, pressure2, temp1]
 
