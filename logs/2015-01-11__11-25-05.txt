@@ -1,0 +1,1 @@
+sample_time, force1, force2, force3, pressure1, pressure2, pressure3, temp1
