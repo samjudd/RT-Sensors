@@ -19,7 +19,7 @@ class LabJackSensor(Sensor):
 		""" Read a new raw value from the sensor hardware interface. 
 		Overrides fucntion in Sensor. """
 		try:
-			self.latest_raw_value = self.LabJack.getAIN(self.pin)
+			self.latest_raw_value = self.lab_jack.getAIN(self.pin)
 		except LabJackException, e:
 			print 'LabJackException during sensor read', e
 			self.valid_satus = False
@@ -38,6 +38,8 @@ class PressureSensor(LabJackSensor):
 		"""
 		self.name = name
 		self.type = 'pressure'
+		self.raw_units = 'volt'
+		self.converted_units = 'pascal'
 		self.offset = offset
 		self.scale = scale
 		super(PressureSensor, self).__init__(lab_jack, pin)
@@ -52,6 +54,7 @@ class PressureSensor(LabJackSensor):
 		# If the sensed pressure is less than vacuum, then the reading is invalid.
 		# If the pressure transducers are not getting power, they will read ~0 volts and produce sub-vacuum
 		# pressure readings.
-		if pressure < -103e5:
+		if pressure < -103e3:
 			self.valid_satus = False
 			print 'Warning: sub-vacuum pressure reading. Are the pressure transducers powered?'
+		return pressure
