@@ -1,4 +1,4 @@
-class Sensor:
+class Sensor(object):
 	def __init__(self):
 		# The latest raw readign from the sensor
 		self.latest_raw_value = None
